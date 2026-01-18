@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incubator Analyzer</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 450px;
+      background: white;
+      color: #333;
+      padding: 30px;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      animation: fadeIn 0.7s ease-in-out;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 8px;
+      color: #2563eb;
+    }
+
+    p {
+      margin-bottom: 25px;
+      font-size: 15px;
+      color: #444;
+    }
+
+    .sensor-box {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+      background: #f3f4f6;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .label {
+      color: #374151;
+    }
+    .value {
+      color: #2563eb;
+      font-weight: bold;
+    }
+
+    footer {
+      font-size: 12px;
+      margin-top: 25px;
+      color: #666;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🟢 Incubator Analyzer</h1>
+    <p>Pengawas suhu & kelembaban realtime</p>
+
+    <div class="sensor-box">
+      <span class="label">Suhu</span>
+      <span id="suhu" class="value">-- °C</span>
+    </div>
+
+    <div class="sensor-box">
+      <span class="label">Kelembaban</span>
+      <span id="kelembaban" class="value">-- %</span>
+    </div>
+
+    <footer>© 2025 IoT Incubator Monitor</footer>
+  </div>
+</body>
+</html>
