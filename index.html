@@ -1,115 +1,167 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Incubator Analyzer</title>
 
   <style>
     * {margin:0;padding:0;box-sizing:border-box;font-family:"Poppins",sans-serif;}
-    body {
+    body{
       background: linear-gradient(135deg,#2563eb,#4f46e5);
       display:flex;align-items:center;justify-content:center;
       padding:20px;min-height:100vh;color:#fff;
     }
-    .card {
-      width:100%;max-width:450px;background:white;color:#333;
-      padding:30px;border-radius:18px;box-shadow:0 10px 25px rgba(0,0,0,0.2);
+    .card{
+      width:100%;max-width:450px;background:#fff;color:#333;
+      padding:30px;border-radius:18px;
+      box-shadow:0 10px 25px rgba(0,0,0,0.2);
       text-align:center;
     }
-    h1 {font-size:26px;margin-bottom:8px;color:#2563eb;}
-    .sensor-box {
-      display:flex;justify-content:space-between;
-      padding:20px;background:#f3f4f6;border-radius:12px;
+    h1{font-size:26px;margin-bottom:8px;color:#2563eb;}
+    p{margin-bottom:18px;color:#444;}
+    .sensor-box{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:18px 20px;background:#f3f4f6;border-radius:12px;
       margin-bottom:10px;font-size:18px;font-weight:500;
     }
-    .label {color:#374151;}
-    .value {color:#2563eb;font-weight:bold;}
-    button {
-      margin-top:15px;padding:12px 18px;border:none;
-      background:#2563eb;color:white;border-radius:8px;
-      cursor:pointer;font-size:15px;
+    .label{color:#374151;}
+    .value{color:#2563eb;font-weight:700;}
+    .meta{
+      margin:10px 0 2px;
+      font-size:12px;color:#6b7280;
     }
-    button:hover {opacity:0.9;}
-    footer {font-size:12px;margin-top:25px;color:#666;}
+    button{
+      margin-top:15px;padding:12px 18px;border:none;
+      background:#2563eb;color:white;border-radius:10px;
+      cursor:pointer;font-size:15px;font-weight:600;
+      width: 180px;
+    }
+    button:hover{opacity:0.92;}
+    button:disabled{opacity:0.55;cursor:not-allowed;}
+    footer{font-size:12px;margin-top:20px;color:#666;}
   </style>
 </head>
+
 <body>
+  <div class="card">
+    <h1>🟢 Incubator Analyzer</h1>
+    <p>Pengawas suhu & kelembaban realtime</p>
 
-<div class="card">
-  <h1>🟢 Incubator Analyzer</h1>
-  <p>Pengawas suhu & kelembaban realtime</p>
+    <div class="sensor-box">
+      <span class="label">Suhu:</span>
+      <span id="suhu" class="value">-- °C</span>
+    </div>
 
-  <div class="sensor-box">
-    <span class="label">Suhu:</span>
-    <span id="suhu" class="value">-- °C</span>
+    <div class="sensor-box">
+      <span class="label">Kelembaban:</span>
+      <span id="kelembaban" class="value">-- %</span>
+    </div>
+
+    <div class="meta">
+      Update terakhir: <span id="lastUpdate">--</span>
+    </div>
+
+    <button id="btnCsv" disabled>Download CSV</button>
+    <footer>© 2025 IoT Incubator Monitor</footer>
   </div>
 
-  <div class="sensor-box">
-    <span class="label">Kelembaban:</span>
-    <span id="kelembaban" class="value">-- %</span>
-  </div>
+  <!-- Firebase v10 (GitHub Pages wajib pakai module) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
-  <button onclick="downloadCSV()">Download CSV</button>
-  <footer>© 2025 IoT Incubator Monitor</footer>
-</div>
+    // ✅ GANTI sesuai config Web App Firebase kamu (Project settings > Your apps > Web app)
+    const firebaseConfig = {
+      apiKey: "GANTI_APIKEY",
+      authDomain: "GANTI_AUTHDOMAIN",  // contoh: incubator-analyzer-eb625.firebaseapp.com
+      databaseURL: "https://incubator-analyzer-eb625-default-rtdb.firebaseio.com/",
+      projectId: "incubator-analyzer-eb625",
+      storageBucket: "GANTI_STORAGEBUCKET", // contoh: incubator-analyzer-eb625.appspot.com
+      messagingSenderId: "GANTI_SENDERID",
+      appId: "GANTI_APPID"
+    };
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+    // Init Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-<script>
-const firebaseConfig = {
-  apiKey: "GANTI",
-  authDomain: "GANTI",
-  databaseURL: "GANTI",
-  projectId: "GANTI",
-  storageBucket: "GANTI",
-  messagingSenderId: "GANTI",
-  appId: "GANTI"
-};
+    // Elemen UI
+    const elSuhu = document.getElementById("suhu");
+    const elHum  = document.getElementById("kelembaban");
+    const elLast = document.getElementById("lastUpdate");
+    const btnCsv = document.getElementById("btnCsv");
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    // CSV log
+    let logData = [];
+    let lastSuhu = null;
+    let lastHum  = null;
 
-// Simpan log CSV
-let logData = [];
+    function nowStr(){
+      return new Date().toLocaleString("id-ID");
+    }
 
-// Realtime suhu
-db.ref("incubator/suhu").on("value", snap => {
-  const suhu = snap.val();
-  const waktu = new Date().toLocaleString();
-  document.getElementById("suhu").innerText = suhu + " °C";
+    function pushRowIfComplete(){
+      if (typeof lastSuhu === "number" && typeof lastHum === "number") {
+        logData.push({
+          waktu: nowStr(),
+          suhu: lastSuhu,
+          kelembaban: lastHum
+        });
+        btnCsv.disabled = logData.length === 0;
+      }
+    }
 
-  logData.push({ waktu, suhu });
-});
+    // Listen suhu
+    onValue(ref(db, "incubator/suhu"), (snap) => {
+      const v = snap.val();
+      const num = (v === null || v === undefined) ? null : Number(v);
 
-// Realtime kelembaban
-db.ref("incubator/kelembaban").on("value", snap => {
-  const kelembaban = snap.val();
-  const waktu = new Date().toLocaleString();
-  document.getElementById("kelembaban").innerText = kelembaban + " %";
+      if (num !== null && !Number.isNaN(num)) {
+        lastSuhu = num;
+        elSuhu.textContent = num.toFixed(1) + " °C";
+        elLast.textContent = nowStr();
+        pushRowIfComplete();
+      }
+    });
 
-  if (logData.length > 0) {
-    logData[logData.length - 1].kelembaban = kelembaban;
-  }
-});
+    // Listen kelembaban
+    onValue(ref(db, "incubator/kelembaban"), (snap) => {
+      const v = snap.val();
+      const num = (v === null || v === undefined) ? null : Number(v);
 
-// Download CSV
-function downloadCSV() {
-  let csv = "waktu,suhu,kelembaban\n";
-  logData.forEach(r => {
-    csv += `${r.waktu},${r.suhu || ""},${r.kelembaban || ""}\n`;
-  });
+      if (num !== null && !Number.isNaN(num)) {
+        lastHum = num;
+        elHum.textContent = num.toFixed(1) + " %";
+        elLast.textContent = nowStr();
+        pushRowIfComplete();
+      }
+    });
 
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "data_incubator.csv";
-  a.click();
-}
-</script>
+    // Download CSV
+    btnCsv.addEventListener("click", () => {
+      if (logData.length === 0) return;
 
+      let csv = "waktu,suhu,kelembaban\n";
+      logData.forEach(r => {
+        csv += `${r.waktu},${r.suhu},${r.kelembaban}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "data_incubator.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+    });
+
+    // (Opsional) biar log nggak kebanyakan
+    // setInterval(() => { if (logData.length > 2000) logData = logData.slice(-2000); }, 60000);
+  </script>
 </body>
 </html>
