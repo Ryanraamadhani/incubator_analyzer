@@ -6,143 +6,170 @@
   <title>Incubator Analyzer</title>
 
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins",sans-serif; }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; }
     body{
-      background:linear-gradient(135deg,#2563eb,#4f46e5);
+      background: linear-gradient(135deg,#2563eb,#4f46e5);
       display:flex; align-items:center; justify-content:center;
       padding:20px; min-height:100vh; color:#fff;
     }
     .card{
-      width:100%; max-width:480px;
+      width:100%; max-width:500px;
       background:#fff; color:#333;
       padding:30px; border-radius:18px;
       box-shadow:0 10px 25px rgba(0,0,0,0.2);
       text-align:center;
     }
-    h1{ font-size:26px; margin-bottom:8px; color:#2563eb; }
-    p{ margin-bottom:18px; color:#444; }
+    h1{ font-size:26px; margin-bottom:6px; color:#2563eb; }
+    p{ color:#555; margin-bottom:18px; }
     .sensor-box{
       display:flex; justify-content:space-between; align-items:center;
-      padding:18px 20px; background:#f3f4f6; border-radius:12px;
-      margin-bottom:10px; font-size:18px; font-weight:500;
+      padding:18px 18px; background:#f3f4f6; border-radius:12px;
+      margin-bottom:10px; font-size:17px; font-weight:500;
     }
     .label{ color:#374151; }
-    .value{ color:#2563eb; font-weight:bold; }
-    button{
-      margin-top:15px; padding:12px 18px; border:none;
-      background:#2563eb; color:white; border-radius:8px;
-      cursor:pointer; font-size:15px;
+    .value{ color:#2563eb; font-weight:700; }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+      margin-top:10px;
     }
-    button:hover{ opacity:0.9; }
-    footer{ font-size:12px; margin-top:22px; color:#666; }
-    .small{ font-size:12px; color:#666; margin-top:8px; }
+    button{
+      margin-top:16px; padding:12px 18px; border:none;
+      background:#2563eb; color:#fff; border-radius:10px;
+      cursor:pointer; font-size:15px; font-weight:600;
+      width:100%;
+    }
+    button:hover{ opacity:0.92; }
+    footer{ font-size:12px; margin-top:18px; color:#777; }
+    .status{
+      font-size:12px;
+      margin-top:10px;
+      color:#666;
+    }
   </style>
 </head>
 
 <body>
   <div class="card">
     <h1>🟢 Incubator Analyzer</h1>
-    <p>Pengawas suhu & kelembaban realtime</p>
+    <p>Pemantauan suhu realtime (3 titik)</p>
 
-    <div class="sensor-box">
-      <span class="label">Suhu 1:</span>
-      <span id="suhu1" class="value">-- °C</span>
-    </div>
+    <div class="grid">
+      <div class="sensor-box">
+        <span class="label">Suhu 1</span>
+        <span id="suhu1" class="value">-- °C</span>
+      </div>
 
-    <div class="sensor-box">
-      <span class="label">Suhu 2:</span>
-      <span id="suhu2" class="value">-- °C</span>
-    </div>
+      <div class="sensor-box">
+        <span class="label">Suhu 2</span>
+        <span id="suhu2" class="value">-- °C</span>
+      </div>
 
-    <div class="sensor-box">
-      <span class="label">Suhu 3:</span>
-      <span id="suhu3" class="value">-- °C</span>
-    </div>
-
-    <div class="sensor-box">
-      <span class="label">Kelembaban:</span>
-      <span id="kelembaban" class="value">-- %</span>
+      <div class="sensor-box">
+        <span class="label">Suhu 3</span>
+        <span id="suhu3" class="value">-- °C</span>
+      </div>
     </div>
 
     <button onclick="downloadCSV()">Download CSV</button>
-    <div class="small">CSV menyimpan data saat nilai berubah</div>
-    <footer>© 2025 IoT Incubator Monitor</footer>
+    <div class="status" id="status">Status: menunggu data...</div>
+
+    <footer>© 2026 IoT Incubator Monitor</footer>
   </div>
 
-  <!-- Firebase (compat biar firebase.initializeApp tetap jalan) -->
+  <!-- Firebase (compat, paling aman untuk GitHub Pages) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
   <script>
-    // 🔥 GANTI ini dengan config Firebase kamu
+    // =========================
+    // 1) ISI CONFIG PUNYA KAMU
+    // =========================
     const firebaseConfig = {
       apiKey: "AIzaSyBgIiTFpHKBLsH7pNoE1-023cDCDzEJLyE",
-      authDomain: "GANTI",
-      databaseURL: "GANTI",
-      projectId: "GANTI",
-      storageBucket: "GANTI",
-      messagingSenderId: "GANTI",
-      appId: "GANTI"
+      authDomain: "incubator-analyzer-eb625.firebaseapp.com",
+      databaseURL: "https://incubator-analyzer-eb625-default-rtdb.firebaseio.com",
+      projectId: "incubator-analyzer-eb625",
+      storageBucket: "incubator-analyzer-eb625.appspot.com",
+      messagingSenderId: "931042351959",
+      appId: "1:931042351959:web:71230ef49f5eeadc1a3c12"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ====== LOG CSV ======
-    // format baris: waktu, suhu1, suhu2, suhu3, kelembaban
-    let logData = [];
-    let last = { suhu1: null, suhu2: null, suhu3: null, kelembaban: null };
+    // =========================
+    // 2) LOG DATA UNTUK CSV
+    // =========================
+    const logData = [];
+    const latest = { suhu1: null, suhu2: null, suhu3: null };
 
-    function pushLogIfComplete() {
-      // simpan kalau minimal ada 1 nilai berubah dan data sudah ada
-      const row = {
-        waktu: new Date().toLocaleString(),
-        suhu1: last.suhu1,
-        suhu2: last.suhu2,
-        suhu3: last.suhu3,
-        kelembaban: last.kelembaban
-      };
-      logData.push(row);
+    function nowString(){
+      return new Date().toLocaleString("id-ID");
     }
 
-    function updateValue(idEl, val, suffix) {
-      document.getElementById(idEl).innerText =
-        (val === null || val === undefined) ? "-- " + suffix : (val + " " + suffix);
+    function pushRow(){
+      // catat satu baris lengkap (kalau 3-3nya sudah ada)
+      if (latest.suhu1 !== null && latest.suhu2 !== null && latest.suhu3 !== null){
+        logData.push({
+          waktu: nowString(),
+          suhu1: latest.suhu1,
+          suhu2: latest.suhu2,
+          suhu3: latest.suhu3
+        });
+        document.getElementById("status").innerText = "Status: data masuk ✅ (" + logData.length + " log)";
+      }
     }
 
-    function onChanged(key, val) {
-      // update tampilan
-      if (key === "suhu1") updateValue("suhu1", val, "°C");
-      if (key === "suhu2") updateValue("suhu2", val, "°C");
-      if (key === "suhu3") updateValue("suhu3", val, "°C");
-      if (key === "kelembaban") updateValue("kelembaban", val, "%");
+    // =========================
+    // 3) REALTIME UPDATE
+    // =========================
+    db.ref("incubator/suhu1").on("value", snap => {
+      const v = snap.val();
+      latest.suhu1 = v;
+      document.getElementById("suhu1").innerText = (v ?? "--") + " °C";
+      pushRow();
+    });
 
-      // simpan nilai terakhir
-      last[key] = val;
+    db.ref("incubator/suhu2").on("value", snap => {
+      const v = snap.val();
+      latest.suhu2 = v;
+      document.getElementById("suhu2").innerText = (v ?? "--") + " °C";
+      pushRow();
+    });
 
-      // simpan log setiap ada perubahan (lebih enak untuk CSV)
-      pushLogIfComplete();
-    }
+    db.ref("incubator/suhu3").on("value", snap => {
+      const v = snap.val();
+      latest.suhu3 = v;
+      document.getElementById("suhu3").innerText = (v ?? "--") + " °C";
+      pushRow();
+    });
 
-    // ====== LISTENER RTDB ======
-    db.ref("incubator/suhu1").on("value", snap => onChanged("suhu1", snap.val()));
-    db.ref("incubator/suhu2").on("value", snap => onChanged("suhu2", snap.val()));
-    db.ref("incubator/suhu3").on("value", snap => onChanged("suhu3", snap.val()));
-    db.ref("incubator/kelembaban").on("value", snap => onChanged("kelembaban", snap.val()));
+    // =========================
+    // 4) DOWNLOAD CSV
+    // =========================
+    function downloadCSV(){
+      if (logData.length === 0){
+        alert("Data log masih kosong. Tunggu beberapa detik sampai data masuk.");
+        return;
+      }
 
-    // ====== DOWNLOAD CSV ======
-    function downloadCSV() {
-      let csv = "waktu,suhu1,suhu2,suhu3,kelembaban\n";
+      let csv = "waktu,suhu1,suhu2,suhu3\n";
       logData.forEach(r => {
-        csv += `${r.waktu},${r.suhu1 ?? ""},${r.suhu2 ?? ""},${r.suhu3 ?? ""},${r.kelembaban ?? ""}\n`;
+        csv += `${r.waktu},${r.suhu1},${r.suhu2},${r.suhu3}\n`;
       });
 
-      const blob = new Blob([csv], { type: "text/csv" });
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
+
       const a = document.createElement("a");
       a.href = url;
-      a.download = "data_incubator.csv";
+      a.download = "data_incubator_3suhu.csv";
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
+
       URL.revokeObjectURL(url);
     }
   </script>
