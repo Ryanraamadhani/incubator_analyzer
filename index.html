@@ -6,256 +6,79 @@
   <title>Incubator Analyzer</title>
 
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins",sans-serif; }
     body{
-      min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
-      background: radial-gradient(1200px 600px at 20% 10%, #4f46e5 0%, rgba(79,70,229,0) 60%),
-                  radial-gradient(1200px 600px at 80% 90%, #2563eb 0%, rgba(37,99,235,0) 55%),
-                  linear-gradient(135deg,#1e3a8a,#4f46e5);
-    }
-    .wrap{width:100%;max-width:980px;display:grid;gap:18px}
-    .top{
-      background:rgba(255,255,255,.12);
-      border:1px solid rgba(255,255,255,.18);
-      backdrop-filter: blur(10px);
-      border-radius:18px;padding:18px 18px;
-      display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;
-    }
-    .title{
-      display:flex;align-items:center;gap:12px;
-    }
-    .dot{
-      width:14px;height:14px;border-radius:999px;background:#22c55e;
-      box-shadow:0 0 0 6px rgba(34,197,94,.18);
-    }
-    h1{font-size:20px;line-height:1.2}
-    .sub{opacity:.9;font-size:12px;margin-top:2px}
-    .status{
-      display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;
-      font-size:12px;opacity:.95
-    }
-    .pill{
-      padding:8px 10px;border-radius:999px;
-      background:rgba(255,255,255,.14);
-      border:1px solid rgba(255,255,255,.18);
-      display:flex;gap:8px;align-items:center;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap:14px;
+      background:linear-gradient(135deg,#2563eb,#4f46e5);
+      display:flex; align-items:center; justify-content:center;
+      padding:20px; min-height:100vh; color:#fff;
     }
     .card{
-      grid-column: span 4;
-      background:#fff;border-radius:18px;padding:16px;
-      box-shadow:0 18px 40px rgba(0,0,0,.18);
+      width:100%; max-width:480px;
+      background:#fff; color:#333;
+      padding:30px; border-radius:18px;
+      box-shadow:0 10px 25px rgba(0,0,0,0.2);
+      text-align:center;
     }
-    .card h2{font-size:13px;color:#111827;opacity:.8;margin-bottom:8px}
-    .value{
-      font-size:34px;font-weight:800;color:#2563eb;letter-spacing:.2px;
-      display:flex;align-items:baseline;gap:6px;
+    h1{ font-size:26px; margin-bottom:8px; color:#2563eb; }
+    p{ margin-bottom:18px; color:#444; }
+    .sensor-box{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:18px 20px; background:#f3f4f6; border-radius:12px;
+      margin-bottom:10px; font-size:18px; font-weight:500;
     }
-    .unit{font-size:14px;color:#6b7280;font-weight:700}
-    .meta{margin-top:8px;font-size:12px;color:#6b7280}
-    .wide{grid-column: span 12}
-    .two{grid-column: span 6}
-    .panel{
-      background:#fff;border-radius:18px;padding:16px;
-      box-shadow:0 18px 40px rgba(0,0,0,.18);
-    }
-    .panel-head{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      margin-bottom:10px;
-    }
-    .panel-title{font-weight:800;color:#111827}
-    .controls{
-      display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;
-    }
+    .label{ color:#374151; }
+    .value{ color:#2563eb; font-weight:bold; }
     button{
-      border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;
-      transition:.15s transform ease,.15s opacity ease;
+      margin-top:15px; padding:12px 18px; border:none;
+      background:#2563eb; color:white; border-radius:8px;
+      cursor:pointer; font-size:15px;
     }
-    button:active{transform:scale(.98)}
-    .btn-primary{background:#2563eb;color:#fff}
-    .btn-ghost{background:#eef2ff;color:#1e3a8a}
-    .btn-danger{background:#ef4444;color:#fff}
-    .row{
-      display:grid;grid-template-columns: 1fr 1fr 1fr;
-      gap:12px;margin-top:12px;
-    }
-    .box{
-      background:#f3f4f6;border-radius:14px;padding:12px;border:1px solid #e5e7eb
-    }
-    .box label{font-size:12px;color:#6b7280;font-weight:700;display:block;margin-bottom:6px}
-    input{
-      width:100%;padding:10px 12px;border-radius:12px;border:1px solid #d1d5db;
-      outline:none;font-weight:700;
-    }
-    .timer{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;
-      padding:12px;border-radius:14px;background:#0b1220;color:#fff;
-    }
-    .timer .big{font-size:22px;font-weight:900;letter-spacing:.8px}
-    .timer .small{font-size:12px;opacity:.85}
-    .hint{font-size:12px;color:#6b7280;margin-top:10px;line-height:1.4}
-    footer{color:rgba(255,255,255,.85);font-size:12px;text-align:center;padding:6px}
-    @media (max-width: 880px){
-      .card{grid-column: span 6}
-      .two{grid-column: span 12}
-    }
-    @media (max-width: 560px){
-      .card{grid-column: span 12}
-      .row{grid-template-columns: 1fr}
-      .status{justify-content:flex-start}
-      h1{font-size:18px}
-    }
+    button:hover{ opacity:0.9; }
+    footer{ font-size:12px; margin-top:22px; color:#666; }
+    .small{ font-size:12px; color:#666; margin-top:8px; }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="title">
-        <div class="dot"></div>
-        <div>
-          <h1>Incubator Analyzer</h1>
-          <div class="sub">Monitoring suhu, suhu matras, kelembaban, kebisingan (realtime)</div>
-        </div>
-      </div>
+  <div class="card">
+    <h1>🟢 Incubator Analyzer</h1>
+    <p>Pengawas suhu & kelembaban realtime</p>
 
-      <div class="status">
-        <div class="pill">Firebase: <span id="fbStatus">connecting...</span></div>
-        <div class="pill">Update: <span id="lastUpdate">-</span></div>
-      </div>
+    <div class="sensor-box">
+      <span class="label">Suhu 1:</span>
+      <span id="suhu1" class="value">-- °C</span>
     </div>
 
-    <div class="grid">
-      <!-- Suhu titik -->
-      <div class="card">
-        <h2>Suhu Titik 1 (T1)</h2>
-        <div class="value"><span id="t1">--</span><span class="unit">°C</span></div>
-        <div class="meta">Path: /incubator/t1/suhu</div>
-      </div>
-
-      <div class="card">
-        <h2>Suhu Titik 2 (T2)</h2>
-        <div class="value"><span id="t2">--</span><span class="unit">°C</span></div>
-        <div class="meta">Path: /incubator/t2/suhu</div>
-      </div>
-
-      <div class="card">
-        <h2>Suhu Titik 3 (T3)</h2>
-        <div class="value"><span id="t3">--</span><span class="unit">°C</span></div>
-        <div class="meta">Path: /incubator/t3/suhu</div>
-      </div>
-
-      <div class="card">
-        <h2>Suhu Titik 4 (T4)</h2>
-        <div class="value"><span id="t4">--</span><span class="unit">°C</span></div>
-        <div class="meta">Path: /incubator/t4/suhu</div>
-      </div>
-
-      <div class="card">
-        <h2>Suhu Matras</h2>
-        <div class="value"><span id="tm">--</span><span class="unit">°C</span></div>
-        <div class="meta">Path: /incubator/matras/suhu</div>
-      </div>
-
-      <div class="card">
-        <h2>Kelembaban</h2>
-        <div class="value"><span id="hum">--</span><span class="unit">%</span></div>
-        <div class="meta">Path: /incubator/kelembaban</div>
-      </div>
-
-      <div class="card">
-        <h2>Kebisingan</h2>
-        <div class="value"><span id="noise">--</span><span class="unit">%</span></div>
-        <div class="meta">Path: /incubator/noise</div>
-      </div>
-
-      <!-- Panel Kalibrasi + CSV -->
-      <div class="panel two">
-        <div class="panel-head">
-          <div class="panel-title">Timer Kalibrasi</div>
-          <div class="controls">
-            <button class="btn-primary" id="btnStart">Mulai</button>
-            <button class="btn-ghost" id="btnStop">Stop</button>
-            <button class="btn-danger" id="btnReset">Reset</button>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="box">
-            <label>Durasi Kalibrasi (menit)</label>
-            <input id="calMinutes" type="number" min="1" value="10" />
-          </div>
-          <div class="box">
-            <label>Interval Logging (detik)</label>
-            <input id="logInterval" type="number" min="1" value="5" />
-          </div>
-          <div class="box">
-            <label>Nama sesi (opsional)</label>
-            <input id="sessionName" type="text" placeholder="mis: Kalibrasi-1" />
-          </div>
-        </div>
-
-        <div class="timer">
-          <div>
-            <div class="small">Status</div>
-            <div id="calStatus" class="big">IDLE</div>
-          </div>
-          <div style="text-align:right">
-            <div class="small">Sisa waktu</div>
-            <div id="calTime" class="big">00:00</div>
-          </div>
-        </div>
-
-        <div class="hint">
-          Saat timer <b>berjalan</b>, web akan menyimpan log data otomatis sesuai interval.
-          Kamu tetap bisa klik <b>Download CSV</b> kapan saja.
-        </div>
-      </div>
-
-      <div class="panel two">
-        <div class="panel-head">
-          <div class="panel-title">Export Data</div>
-          <div class="controls">
-            <button class="btn-primary" id="btnCSV">Download CSV</button>
-            <button class="btn-ghost" id="btnClear">Clear Log</button>
-          </div>
-        </div>
-
-        <div class="box" style="margin-top:10px">
-          <label>Jumlah data tersimpan</label>
-          <div style="font-weight:900;font-size:20px;color:#111827">
-            <span id="logCount">0</span> baris
-          </div>
-          <div class="hint" style="margin-top:6px">
-            Format CSV: waktu, t1,t2,t3,t4,matras,kelembaban,noise,session
-          </div>
-        </div>
-      </div>
-
-      <div class="wide" style="text-align:center;color:rgba(255,255,255,.85);font-size:12px">
-        © 2026 IoT Incubator Monitor
-      </div>
+    <div class="sensor-box">
+      <span class="label">Suhu 2:</span>
+      <span id="suhu2" class="value">-- °C</span>
     </div>
 
-    <footer>Data realtime dari Firebase Realtime Database</footer>
+    <div class="sensor-box">
+      <span class="label">Suhu 3:</span>
+      <span id="suhu3" class="value">-- °C</span>
+    </div>
+
+    <div class="sensor-box">
+      <span class="label">Kelembaban:</span>
+      <span id="kelembaban" class="value">-- %</span>
+    </div>
+
+    <button onclick="downloadCSV()">Download CSV</button>
+    <div class="small">CSV menyimpan data saat nilai berubah</div>
+    <footer>© 2025 IoT Incubator Monitor</footer>
   </div>
 
-  <!-- Firebase (Compat, biar mudah dan stabil di GitHub Pages) -->
+  <!-- Firebase (compat biar firebase.initializeApp tetap jalan) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
   <script>
-    // =======================
-    // 1) GANTI firebaseConfig
-    // =======================
+    // 🔥 GANTI ini dengan config Firebase kamu
     const firebaseConfig = {
-      apiKey: "GANTI_DENGAN_APIKEY_KAMU",
+      apiKey: "GANTI",
       authDomain: "GANTI",
-      databaseURL: "GANTI_DATABASE_URL_KAMU",
+      databaseURL: "GANTI",
       projectId: "GANTI",
       storageBucket: "GANTI",
       messagingSenderId: "GANTI",
@@ -265,49 +88,56 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const el = (id) => document.getElementById(id);
-    const setText = (id, v) => el(id).textContent = v;
+    // ====== LOG CSV ======
+    // format baris: waktu, suhu1, suhu2, suhu3, kelembaban
+    let logData = [];
+    let last = { suhu1: null, suhu2: null, suhu3: null, kelembaban: null };
 
-    // =======================
-    // 2) State realtime values
-    // =======================
-    const current = {
-      t1: null, t2: null, t3: null, t4: null, tm: null,
-      hum: null, noise: null
-    };
-
-    function nowStr(){
-      return new Date().toLocaleString();
-    }
-
-    function markUpdate(){
-      setText("lastUpdate", nowStr());
-    }
-
-    // =======================
-    // 3) CSV Log
-    // =======================
-    let logData = [];  // {waktu,t1,t2,t3,t4,tm,hum,noise,session}
-
-    function pushLog(session=""){
+    function pushLogIfComplete() {
+      // simpan kalau minimal ada 1 nilai berubah dan data sudah ada
       const row = {
-        waktu: nowStr(),
-        t1: current.t1, t2: current.t2, t3: current.t3, t4: current.t4,
-        tm: current.tm, hum: current.hum, noise: current.noise,
-        session: session || ""
+        waktu: new Date().toLocaleString(),
+        suhu1: last.suhu1,
+        suhu2: last.suhu2,
+        suhu3: last.suhu3,
+        kelembaban: last.kelembaban
       };
       logData.push(row);
-      setText("logCount", logData.length);
     }
 
-    function downloadCSV(){
-      let csv = "waktu,t1,t2,t3,t4,matras,kelembaban,noise,session\n";
+    function updateValue(idEl, val, suffix) {
+      document.getElementById(idEl).innerText =
+        (val === null || val === undefined) ? "-- " + suffix : (val + " " + suffix);
+    }
+
+    function onChanged(key, val) {
+      // update tampilan
+      if (key === "suhu1") updateValue("suhu1", val, "°C");
+      if (key === "suhu2") updateValue("suhu2", val, "°C");
+      if (key === "suhu3") updateValue("suhu3", val, "°C");
+      if (key === "kelembaban") updateValue("kelembaban", val, "%");
+
+      // simpan nilai terakhir
+      last[key] = val;
+
+      // simpan log setiap ada perubahan (lebih enak untuk CSV)
+      pushLogIfComplete();
+    }
+
+    // ====== LISTENER RTDB ======
+    db.ref("incubator/suhu1").on("value", snap => onChanged("suhu1", snap.val()));
+    db.ref("incubator/suhu2").on("value", snap => onChanged("suhu2", snap.val()));
+    db.ref("incubator/suhu3").on("value", snap => onChanged("suhu3", snap.val()));
+    db.ref("incubator/kelembaban").on("value", snap => onChanged("kelembaban", snap.val()));
+
+    // ====== DOWNLOAD CSV ======
+    function downloadCSV() {
+      let csv = "waktu,suhu1,suhu2,suhu3,kelembaban\n";
       logData.forEach(r => {
-        const safe = (x) => (x === null || x === undefined) ? "" : x;
-        csv += `${safe(r.waktu)},${safe(r.t1)},${safe(r.t2)},${safe(r.t3)},${safe(r.t4)},${safe(r.tm)},${safe(r.hum)},${safe(r.noise)},${safe(r.session)}\n`;
+        csv += `${r.waktu},${r.suhu1 ?? ""},${r.suhu2 ?? ""},${r.suhu3 ?? ""},${r.kelembaban ?? ""}\n`;
       });
 
-      const blob = new Blob([csv], {type:"text/csv"});
+      const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -315,119 +145,6 @@
       a.click();
       URL.revokeObjectURL(url);
     }
-
-    // =======================
-    // 4) Timer Kalibrasi
-    // =======================
-    let calRunning = false;
-    let calEndAt = 0;
-    let tickHandle = null;
-    let logHandle = null;
-
-    function fmtMMSS(ms){
-      const s = Math.max(0, Math.floor(ms/1000));
-      const mm = String(Math.floor(s/60)).padStart(2,"0");
-      const ss = String(s%60).padStart(2,"0");
-      return `${mm}:${ss}`;
-    }
-
-    function stopCalibration(finalStop=false){
-      calRunning = false;
-      if (tickHandle) { clearInterval(tickHandle); tickHandle=null; }
-      if (logHandle)  { clearInterval(logHandle);  logHandle=null;  }
-      setText("calStatus", finalStop ? "SELESAI" : "STOP");
-      setText("calTime", "00:00");
-    }
-
-    function startCalibration(){
-      const minutes = parseInt(el("calMinutes").value || "10", 10);
-      const intervalSec = parseInt(el("logInterval").value || "5", 10);
-      const session = el("sessionName").value?.trim() || "";
-
-      if (minutes <= 0 || intervalSec <= 0){
-        alert("Durasi dan interval harus > 0");
-        return;
-      }
-
-      calRunning = true;
-      setText("calStatus", "RUNNING");
-      const durMs = minutes * 60 * 1000;
-      calEndAt = Date.now() + durMs;
-
-      // tick UI
-      tickHandle = setInterval(() => {
-        const left = calEndAt - Date.now();
-        setText("calTime", fmtMMSS(left));
-        if (left <= 0){
-          // terakhir push log sekali biar lengkap
-          pushLog(session);
-          stopCalibration(true);
-        }
-      }, 250);
-
-      // logging interval
-      logHandle = setInterval(() => {
-        if (!calRunning) return;
-        pushLog(session);
-      }, intervalSec * 1000);
-
-      // push log pertama saat mulai
-      pushLog(session);
-    }
-
-    // =======================
-    // 5) Realtime listeners
-    // =======================
-    function bind(path, key, elementId, suffix=""){
-      db.ref(path).on("value", snap => {
-        const v = snap.val();
-        current[key] = v;
-        setText(elementId, (v ?? "--") + suffix);
-        setText("fbStatus", "online");
-        markUpdate();
-      }, err => {
-        console.log("Firebase error", err);
-        setText("fbStatus", "error");
-      });
-    }
-
-    // suhu titik
-    bind("incubator/t1/suhu", "t1", "t1", "");
-    bind("incubator/t2/suhu", "t2", "t2", "");
-    bind("incubator/t3/suhu", "t3", "t3", "");
-    bind("incubator/t4/suhu", "t4", "t4", "");
-    bind("incubator/matras/suhu", "tm", "tm", "");
-    // kelembaban & noise
-    bind("incubator/kelembaban", "hum", "hum", "");
-    bind("incubator/noise", "noise", "noise", "");
-
-    // =======================
-    // 6) Buttons
-    // =======================
-    el("btnCSV").addEventListener("click", downloadCSV);
-    el("btnClear").addEventListener("click", () => {
-      if (confirm("Hapus log CSV di browser?")) {
-        logData = [];
-        setText("logCount", 0);
-      }
-    });
-
-    el("btnStart").addEventListener("click", () => {
-      if (calRunning) return;
-      startCalibration();
-    });
-
-    el("btnStop").addEventListener("click", () => {
-      if (!calRunning) return;
-      calRunning = false;
-      if (tickHandle) { clearInterval(tickHandle); tickHandle=null; }
-      if (logHandle)  { clearInterval(logHandle);  logHandle=null;  }
-      setText("calStatus", "STOP");
-    });
-
-    el("btnReset").addEventListener("click", () => {
-      stopCalibration(false);
-    });
   </script>
 </body>
 </html>
