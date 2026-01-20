@@ -13,7 +13,7 @@
       padding:20px; min-height:100vh; color:#fff;
     }
     .card{
-      width:100%; max-width:500px;
+      width:100%; max-width:520px;
       background:#fff; color:#333;
       padding:30px; border-radius:18px;
       box-shadow:0 10px 25px rgba(0,0,0,0.2);
@@ -25,8 +25,9 @@
       display:flex; justify-content:space-between; align-items:center;
       padding:18px 18px; background:#f3f4f6; border-radius:12px;
       margin-bottom:10px; font-size:17px; font-weight:500;
+      gap:12px;
     }
-    .label{ color:#374151; }
+    .label{ color:#374151; text-align:left; }
     .value{ color:#2563eb; font-weight:700; }
     .grid{
       display:grid;
@@ -35,17 +36,27 @@
       margin-top:10px;
     }
     button{
-      margin-top:16px; padding:12px 18px; border:none;
+      margin-top:10px; padding:12px 18px; border:none;
       background:#2563eb; color:#fff; border-radius:10px;
       cursor:pointer; font-size:15px; font-weight:600;
       width:100%;
     }
     button:hover{ opacity:0.92; }
+    button:disabled{ opacity:0.6; cursor:not-allowed; }
     footer{ font-size:12px; margin-top:18px; color:#777; }
     .status{
       font-size:12px;
       margin-top:10px;
       color:#666;
+    }
+    .rowBtns{
+      display:flex; gap:10px; margin-top:10px;
+    }
+    .btnSecondary{ background:#6b7280; }
+    input[type="number"]{
+      width:120px; padding:8px 10px;
+      border-radius:10px; border:1px solid #d1d5db;
+      outline:none; font-size:14px;
     }
   </style>
 </head>
@@ -72,13 +83,31 @@
       </div>
     </div>
 
+    <!-- ===== TIMER PENGUKURAN ===== -->
+    <div style="margin-top:14px; text-align:left;">
+      <div class="sensor-box">
+        <span class="label">Durasi pengukuran (detik)</span>
+        <input id="measureSeconds" type="number" min="5" value="30" />
+      </div>
+
+      <div class="sensor-box">
+        <span class="label">Timer</span>
+        <span id="timer" class="value">00:00</span>
+      </div>
+
+      <div class="rowBtns">
+        <button id="btnStart" onclick="startMeasurement()" style="flex:1;">Mulai Pengukuran</button>
+        <button id="btnStop" onclick="stopMeasurement(true)" class="btnSecondary" style="flex:1;">Stop</button>
+      </div>
+    </div>
+
     <button onclick="downloadCSV()">Download CSV</button>
     <div class="status" id="status">Status: menunggu data...</div>
 
     <footer>© 2026 IoT Incubator Monitor</footer>
   </div>
 
-  <!-- Firebase (compat, paling aman untuk GitHub Pages) -->
+  <!-- Firebase (compat, aman untuk GitHub Pages) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
@@ -100,64 +129,132 @@
     const db = firebase.database();
 
     // =========================
-    // 2) LOG DATA UNTUK CSV
+    // 2) DATA TERBARU + LOG CSV
     // =========================
-    const logData = [];
     const latest = { suhu1: null, suhu2: null, suhu3: null };
+    const logData = []; // isi saat pengukuran berjalan
+
+    // status pengukuran + timer
+    let measuring = false;
+    let endAt = 0;
+    let timerInterval = null;
 
     function nowString(){
       return new Date().toLocaleString("id-ID");
     }
 
-    function pushRow(){
-      // catat satu baris lengkap (kalau 3-3nya sudah ada)
-      if (latest.suhu1 !== null && latest.suhu2 !== null && latest.suhu3 !== null){
-        logData.push({
-          waktu: nowString(),
-          suhu1: latest.suhu1,
-          suhu2: latest.suhu2,
-          suhu3: latest.suhu3
-        });
-        document.getElementById("status").innerText = "Status: data masuk ✅ (" + logData.length + " log)";
+    function fmtTime(ms){
+      const s = Math.max(0, Math.ceil(ms / 1000));
+      const mm = String(Math.floor(s / 60)).padStart(2,"0");
+      const ss = String(s % 60).padStart(2,"0");
+      return `${mm}:${ss}`;
+    }
+
+    function setStatus(text){
+      document.getElementById("status").innerText = text;
+    }
+
+    // catat satu baris kalau semua suhu sudah ada
+    function pushRowIfReady(){
+      if (latest.suhu1 === null || latest.suhu2 === null || latest.suhu3 === null) return;
+      if (!measuring) return;
+
+      logData.push({
+        waktu: nowString(),
+        suhu1: latest.suhu1,
+        suhu2: latest.suhu2,
+        suhu3: latest.suhu3
+      });
+
+      setStatus(`Status: pengukuran berjalan ⏳ (${logData.length} log)`);
+    }
+
+    // =========================
+    // 3) TIMER PENGUKURAN
+    // =========================
+    function startMeasurement(){
+      if (measuring) return;
+
+      const secs = parseInt(document.getElementById("measureSeconds").value || "30", 10);
+      if (isNaN(secs) || secs < 5){
+        alert("Durasi minimal 5 detik.");
+        return;
+      }
+
+      // reset log
+      logData.length = 0;
+
+      measuring = true;
+      endAt = Date.now() + secs * 1000;
+
+      document.getElementById("btnStart").disabled = true;
+      document.getElementById("timer").innerText = fmtTime(endAt - Date.now());
+      setStatus("Status: pengukuran dimulai ✅");
+
+      timerInterval = setInterval(() => {
+        const left = endAt - Date.now();
+        document.getElementById("timer").innerText = fmtTime(left);
+        if (left <= 0){
+          stopMeasurement(false);
+        }
+      }, 250);
+    }
+
+    function stopMeasurement(byUser){
+      if (!measuring) return;
+
+      measuring = false;
+      clearInterval(timerInterval);
+      timerInterval = null;
+
+      document.getElementById("btnStart").disabled = false;
+      document.getElementById("timer").innerText = "00:00";
+
+      if (byUser){
+        setStatus(`Status: pengukuran dihentikan ⛔ (${logData.length} log)`);
+      } else {
+        setStatus(`Status: pengukuran selesai ✅ (${logData.length} log)`);
       }
     }
 
     // =========================
-    // 3) REALTIME UPDATE
+    // 4) REALTIME UPDATE FIREBASE
     // =========================
     db.ref("incubator/suhu1").on("value", snap => {
       const v = snap.val();
       latest.suhu1 = v;
       document.getElementById("suhu1").innerText = (v ?? "--") + " °C";
-      pushRow();
+      pushRowIfReady();
     });
 
     db.ref("incubator/suhu2").on("value", snap => {
       const v = snap.val();
       latest.suhu2 = v;
       document.getElementById("suhu2").innerText = (v ?? "--") + " °C";
-      pushRow();
+      pushRowIfReady();
     });
 
     db.ref("incubator/suhu3").on("value", snap => {
       const v = snap.val();
       latest.suhu3 = v;
       document.getElementById("suhu3").innerText = (v ?? "--") + " °C";
-      pushRow();
+      pushRowIfReady();
     });
 
     // =========================
-    // 4) DOWNLOAD CSV
+    // 5) DOWNLOAD CSV
     // =========================
     function downloadCSV(){
       if (logData.length === 0){
-        alert("Data log masih kosong. Tunggu beberapa detik sampai data masuk.");
+        alert("Data log masih kosong. Klik 'Mulai Pengukuran' dulu dan tunggu data masuk.");
         return;
       }
 
       let csv = "waktu,suhu1,suhu2,suhu3\n";
       logData.forEach(r => {
-        csv += `${r.waktu},${r.suhu1},${r.suhu2},${r.suhu3}\n`;
+        // aman kalau ada koma di format waktu
+        const waktu = `"${String(r.waktu).replaceAll('"','""')}"`;
+        csv += `${waktu},${r.suhu1},${r.suhu2},${r.suhu3}\n`;
       });
 
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -165,7 +262,7 @@
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = "data_incubator_3suhu.csv";
+      a.download = `data_incubator_3suhu_${Date.now()}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
