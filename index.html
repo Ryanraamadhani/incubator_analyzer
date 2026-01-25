@@ -45,7 +45,7 @@
     }
     .ok{ background:#dcfce7; color:#166534; }
     .warn{ background:#fee2e2; color:#991b1b; }
-    .muted{ color:#6b7280; font-size:12px; margin-top:10px; }
+    .muted{ background:#e5e7eb; color:#374151; }
     button{
       padding:12px 14px; border:none;
       background:#2563eb; color:#fff; border-radius:10px;
@@ -69,8 +69,8 @@
 
 <body>
   <div class="card">
-    <h1>🟢 Incubator Analyzer</h1>
-    <p>Pemantauan realtime: 5 suhu DS18B20 + kelembaban + kebisingan + alarm</p>
+    <h1>🟢 Baby Incubator Analyzer</h1>
+    <p>Realtime: 5 suhu + kelembaban + kebisingan + alarm.</p>
 
     <!-- STATUS ALARM -->
     <div class="sensor-box" style="margin-top:6px;">
@@ -87,14 +87,14 @@
       <div class="sensor-box"><span class="label">Suhu Matras</span><span id="t5" class="value">-- °C</span></div>
 
       <div class="sensor-box"><span class="label">Kelembaban</span><span id="hum" class="value">-- %</span></div>
-      <div class="sensor-box"><span class="label">Kebisingan</span><span id="noise" class="value">--</span></div>
+      <div class="sensor-box"><span class="label">Kebisingan)</span><span id="noise" class="value">--</span></div>
     </div>
 
     <!-- TIMER PENGUKURAN -->
     <div style="margin-top:14px; text-align:left;">
       <div class="sensor-box">
         <span class="label">Durasi pengukuran (detik)</span>
-        <input id="measureSeconds" type="number" min="5" value="30" />
+        <input id="measureSeconds" type="number" min="5" value="180" />
       </div>
 
       <div class="sensor-box">
@@ -114,7 +114,7 @@
     </div>
 
     <div class="status" id="status">Status: menunggu data...</div>
-    <footer>© 2026 Ryan Ramadhani TA</footer>
+    <footer>© 2026 IoT Ryan Ramadhani TA</footer>
   </div>
 
   <!-- Firebase compat -->
@@ -156,12 +156,14 @@
     }
 
     // =========================
-    // 3) TIMER + LOGGING
+    // 3) TIMER + LOGGING (TIAP 59 DETIK)
     // =========================
+    const LOG_EVERY_MS = 59000; // 59 detik
     let measuring = false;
     let endAt = 0;
     let timerInterval = null;
-    const logData = []; // isi saat pengukuran berjalan
+    let logInterval = null;
+    const logData = [];
 
     function fmtTime(ms){
       const s = Math.max(0, Math.ceil(ms / 1000));
@@ -174,7 +176,7 @@
       document.getElementById("status").innerText = text;
     }
 
-    // catat satu row setiap kali ada update realtime (selama pengukuran aktif)
+    // simpan 1 baris (paket lengkap semua sensor)
     function pushLogRow(){
       if (!measuring) return;
 
@@ -186,13 +188,13 @@
         alarm: latest.alarm
       });
 
-      setStatus(`Status: pengukuran berjalan ⏳ (${logData.length} log)`);
+      setStatus(`Status: pengukuran berjalan ⏳ (${logData.length} log, tiap 59 detik)`);
     }
 
     function startMeasurement(){
       if (measuring) return;
 
-      const secs = parseInt(document.getElementById("measureSeconds").value || "30", 10);
+      const secs = parseInt(document.getElementById("measureSeconds").value || "180", 10);
       if (isNaN(secs) || secs < 5){
         alert("Durasi minimal 5 detik.");
         return;
@@ -204,8 +206,17 @@
 
       document.getElementById("btnStart").disabled = true;
       document.getElementById("timer").innerText = fmtTime(endAt - Date.now());
-      setStatus("Status: pengukuran dimulai ✅");
+      setStatus("Status: pengukuran dimulai ✅ (log tiap 59 detik)");
 
+      // ambil sampel pertama langsung
+      pushLogRow();
+
+      // lalu sampling tiap 59 detik
+      logInterval = setInterval(() => {
+        pushLogRow();
+      }, LOG_EVERY_MS);
+
+      // timer countdown
       timerInterval = setInterval(() => {
         const left = endAt - Date.now();
         document.getElementById("timer").innerText = fmtTime(left);
@@ -219,8 +230,12 @@
       if (!measuring) return;
 
       measuring = false;
+
       clearInterval(timerInterval);
       timerInterval = null;
+
+      clearInterval(logInterval);
+      logInterval = null;
 
       document.getElementById("btnStart").disabled = false;
       document.getElementById("timer").innerText = "00:00";
@@ -271,7 +286,7 @@
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = `incubator_log_${Date.now()}.csv`;
+      a.download = `incubator_log_59s_${Date.now()}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -280,7 +295,7 @@
     }
 
     // =========================
-    // 4) REALTIME LISTENERS
+    // 4) REALTIME LISTENERS (TAMPILAN SAJA)
     // =========================
     function setAlarmBadge(val){
       const el = document.getElementById("alarmBadge");
@@ -297,22 +312,22 @@
     }
 
     // suhu titik 1-4
-    db.ref("incubator/suhu/t1").on("value", snap => { latest.t1 = snap.val(); setText("t1", latest.t1, " °C"); pushLogRow(); });
-    db.ref("incubator/suhu/t2").on("value", snap => { latest.t2 = snap.val(); setText("t2", latest.t2, " °C"); pushLogRow(); });
-    db.ref("incubator/suhu/t3").on("value", snap => { latest.t3 = snap.val(); setText("t3", latest.t3, " °C"); pushLogRow(); });
-    db.ref("incubator/suhu/t4").on("value", snap => { latest.t4 = snap.val(); setText("t4", latest.t4, " °C"); pushLogRow(); });
+    db.ref("incubator/suhu/t1").on("value", snap => { latest.t1 = snap.val(); setText("t1", latest.t1, " °C"); });
+    db.ref("incubator/suhu/t2").on("value", snap => { latest.t2 = snap.val(); setText("t2", latest.t2, " °C"); });
+    db.ref("incubator/suhu/t3").on("value", snap => { latest.t3 = snap.val(); setText("t3", latest.t3, " °C"); });
+    db.ref("incubator/suhu/t4").on("value", snap => { latest.t4 = snap.val(); setText("t4", latest.t4, " °C"); });
 
     // suhu matras
-    db.ref("incubator/suhu_matras").on("value", snap => { latest.t5 = snap.val(); setText("t5", latest.t5, " °C"); pushLogRow(); });
+    db.ref("incubator/suhu_matras").on("value", snap => { latest.t5 = snap.val(); setText("t5", latest.t5, " °C"); });
 
     // kelembaban
-    db.ref("incubator/kelembaban").on("value", snap => { latest.hum = snap.val(); setText("hum", latest.hum, " %"); pushLogRow(); });
+    db.ref("incubator/kelembaban").on("value", snap => { latest.hum = snap.val(); setText("hum", latest.hum, " %"); });
 
     // noise analog
-    db.ref("incubator/noise/analog").on("value", snap => { latest.noise = snap.val(); setText("noise", latest.noise, ""); pushLogRow(); });
+    db.ref("incubator/noise/analog").on("value", snap => { latest.noise = snap.val(); setText("noise", latest.noise, ""); });
 
     // alarm
-    db.ref("incubator/alarm").on("value", snap => { latest.alarm = snap.val(); setAlarmBadge(latest.alarm); pushLogRow(); });
+    db.ref("incubator/alarm").on("value", snap => { latest.alarm = snap.val(); setAlarmBadge(latest.alarm); });
 
     setStatus("Status: listener Firebase aktif ✅");
   </script>
