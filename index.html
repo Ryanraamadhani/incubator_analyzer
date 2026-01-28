@@ -6,124 +6,132 @@
   <title>Incubator Analyzer</title>
 
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; }
+    *{margin:0;padding:0;box-sizing:border-box;font-family:"Poppins",sans-serif;}
     body{
-      background: linear-gradient(135deg,#2563eb,#4f46e5);
-      display:flex; align-items:center; justify-content:center;
-      padding:20px; min-height:100vh; color:#fff;
+      background:linear-gradient(135deg,#2563eb,#4f46e5);
+      display:flex;align-items:center;justify-content:center;
+      padding:20px;min-height:100vh;color:#fff;
     }
     .card{
-      width:100%; max-width:620px;
-      background:#fff; color:#333;
-      padding:26px; border-radius:18px;
+      width:100%;max-width:720px;background:#fff;color:#111827;
+      padding:24px;border-radius:18px;
       box-shadow:0 10px 25px rgba(0,0,0,0.2);
-      text-align:center;
     }
-    h1{ font-size:26px; margin-bottom:6px; color:#2563eb; }
-    p{ color:#555; margin-bottom:14px; }
-    .grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-      margin-top:10px;
-      text-align:left;
-    }
-    .sensor-box{
-      display:flex; justify-content:space-between; align-items:center;
-      padding:14px 16px; background:#f3f4f6; border-radius:12px;
-      font-size:15px; font-weight:500;
+    h1{font-size:24px;color:#2563eb;margin-bottom:6px;}
+    p{color:#6b7280;margin-bottom:14px;font-size:13px;line-height:1.4;}
+    .grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media (max-width:560px){.row2{grid-template-columns:1fr;}}
+    .box{
+      display:flex;align-items:center;justify-content:space-between;
+      background:#f3f4f6;border-radius:12px;padding:12px 14px;
       gap:10px;
     }
-    .label{ color:#374151; }
-    .value{ color:#2563eb; font-weight:800; }
-    .badge{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:700;
-    }
-    .ok{ background:#dcfce7; color:#166534; }
-    .warn{ background:#fee2e2; color:#991b1b; }
-    .muted{ background:#e5e7eb; color:#374151; }
+    .label{color:#374151;font-weight:600;font-size:14px;}
+    .value{color:#2563eb;font-weight:800;font-size:15px;}
+    .badge{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;}
+    .ok{background:#dcfce7;color:#166534;}
+    .warn{background:#fee2e2;color:#991b1b;}
+    .muted{background:#e5e7eb;color:#374151;}
+
+    .sectionTitle{margin-top:14px;color:#111827;font-weight:800;font-size:14px;}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+    @media (max-width:560px){.controls{grid-template-columns:1fr;}}
+    .btnRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
     button{
-      padding:12px 14px; border:none;
-      background:#2563eb; color:#fff; border-radius:10px;
-      cursor:pointer; font-size:14px; font-weight:700;
-      width:100%;
+      border:none;border-radius:12px;padding:12px 12px;
+      background:#2563eb;color:#fff;font-weight:800;cursor:pointer;
+      font-size:14px;
     }
-    button:hover{ opacity:0.92; }
-    button:disabled{ opacity:0.6; cursor:not-allowed; }
-    .rowBtns{ display:flex; gap:10px; margin-top:10px; }
-    .btnSecondary{ background:#6b7280; }
+    button:hover{opacity:.93;}
+    button.secondary{background:#6b7280;}
+    button:disabled{opacity:.6;cursor:not-allowed;}
     input[type="number"]{
-      width:120px; padding:8px 10px;
-      border-radius:10px; border:1px solid #d1d5db;
-      outline:none; font-size:14px;
-      background:#fff;
+      width:140px;border:1px solid #d1d5db;border-radius:12px;
+      padding:10px 12px;font-weight:700;
+      outline:none;background:#fff;color:#111827;
     }
-    footer{ font-size:12px; margin-top:16px; color:#777; }
-    .status{ font-size:12px; margin-top:10px; color:#666; text-align:left; }
+    .status{margin-top:12px;color:#6b7280;font-size:12px;}
+    .footer{margin-top:14px;color:#9ca3af;font-size:12px;text-align:center;}
+    .small{font-size:12px;color:#6b7280;font-weight:600;}
+    .linkish{color:#2563eb;font-weight:800;}
   </style>
 </head>
 
 <body>
   <div class="card">
-    <h1>🟢 Baby Incubator Analyzer</h1>
-    <p>Realtime: 5 suhu + kelembaban + kebisingan + alarm.</p>
+    <h1>🟢 Incubator Analyzer</h1>
+    <p>
+      Monitoring realtime (Firebase RTDB): 5 suhu (4 titik + matras), kelembaban, kebisingan, alarm.
+      Log disimpan <span class="linkish">tiap 59 detik</span> saat pengukuran aktif.
+    </p>
 
-    <!-- STATUS ALARM -->
-    <div class="sensor-box" style="margin-top:6px;">
+    <div class="box">
       <span class="label">Status Alarm</span>
       <span id="alarmBadge" class="badge muted">memuat...</span>
     </div>
 
-    <!-- SENSOR VIEW -->
     <div class="grid">
-      <div class="sensor-box"><span class="label">Suhu Titik 1</span><span id="t1" class="value">-- °C</span></div>
-      <div class="sensor-box"><span class="label">Suhu Titik 2</span><span id="t2" class="value">-- °C</span></div>
-      <div class="sensor-box"><span class="label">Suhu Titik 3</span><span id="t3" class="value">-- °C</span></div>
-      <div class="sensor-box"><span class="label">Suhu Titik 4</span><span id="t4" class="value">-- °C</span></div>
-      <div class="sensor-box"><span class="label">Suhu Matras</span><span id="t5" class="value">-- °C</span></div>
+      <div class="row2">
+        <div class="box"><span class="label">Suhu Titik 1</span><span id="t1" class="value">-- °C</span></div>
+        <div class="box"><span class="label">Suhu Titik 2</span><span id="t2" class="value">-- °C</span></div>
+      </div>
+      <div class="row2">
+        <div class="box"><span class="label">Suhu Titik 3</span><span id="t3" class="value">-- °C</span></div>
+        <div class="box"><span class="label">Suhu Titik 4</span><span id="t4" class="value">-- °C</span></div>
+      </div>
+      <div class="box"><span class="label">Suhu Matras</span><span id="t5" class="value">-- °C</span></div>
 
-      <div class="sensor-box"><span class="label">Kelembaban</span><span id="hum" class="value">-- %</span></div>
-      <div class="sensor-box"><span class="label">Kebisingan)</span><span id="noise" class="value">--</span></div>
+      <div class="row2">
+        <div class="box"><span class="label">Kelembaban</span><span id="hum" class="value">-- %</span></div>
+        <div class="box"><span class="label">Kebisingan</span><span id="noise" class="value">--</span></div>
+      </div>
     </div>
 
-    <!-- TIMER PENGUKURAN -->
-    <div style="margin-top:14px; text-align:left;">
-      <div class="sensor-box">
-        <span class="label">Durasi pengukuran (detik)</span>
+    <div class="sectionTitle">Pengukuran & Log</div>
+    <div class="controls">
+      <div class="box">
+        <div>
+          <div class="label">Durasi pengukuran</div>
+          <div class="small">Satuan detik</div>
+        </div>
         <input id="measureSeconds" type="number" min="5" value="180" />
       </div>
-
-      <div class="sensor-box">
-        <span class="label">Timer</span>
+      <div class="box">
+        <div>
+          <div class="label">Timer</div>
+          <div class="small">Countdown</div>
+        </div>
         <span id="timer" class="value">00:00</span>
       </div>
+    </div>
 
-      <div class="rowBtns">
-        <button id="btnStart" onclick="startMeasurement()" style="flex:1;">Mulai Pengukuran</button>
-        <button id="btnStop" onclick="stopMeasurement(true)" class="btnSecondary" style="flex:1;">Stop</button>
-      </div>
+    <div class="btnRow">
+      <button id="btnStart" onclick="startMeasurement()">Mulai Pengukuran</button>
+      <button class="secondary" onclick="stopMeasurement(true)">Stop</button>
+    </div>
 
-      <div class="rowBtns">
-        <button onclick="downloadCSV()" style="flex:1;">Download CSV</button>
-        <button onclick="clearLog()" class="btnSecondary" style="flex:1;">Reset Log</button>
-      </div>
+    <div class="btnRow">
+      <button onclick="downloadCSV()">Download CSV</button>
+      <button class="secondary" onclick="clearLog()">Reset Log</button>
+    </div>
+
+    <div class="btnRow">
+      <button onclick="uploadCSVtoDrive()">Upload CSV ke Google Drive</button>
+      <button class="secondary" onclick="copyLastCSVPreview()">Copy Preview CSV</button>
     </div>
 
     <div class="status" id="status">Status: menunggu data...</div>
-    <footer>© 2026 IoT Ryan Ramadhani TA</footer>
+    <div class="footer">© 2026 IoT Incubator Monitor</div>
   </div>
 
-  <!-- Firebase compat -->
+  <!-- Firebase compat (aman untuk GitHub Pages) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
   <script>
     // =========================
-    // 1) ISI CONFIG PUNYA KAMU
+    // A) CONFIG FIREBASE (ISI PUNYA KAMU)
     // =========================
     const firebaseConfig = {
       apiKey: "AIzaSyBgIiTFpHKBLsH7pNoE1-023cDCDzEJLyE",
@@ -135,30 +143,47 @@
       appId: "1:931042351959:web:71230ef49f5eeadc1a3c12"
     };
 
+    // =========================
+    // B) URL GOOGLE APPS SCRIPT WEB APP (ISI DARI DEPLOY)
+    // contoh: https://script.google.com/macros/s/AKfycbxxxx/exec
+    // =========================
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw0GmMHJPgjnQaoD8MuG53-CjovHNXSu_2kOhK5Gak/dev";
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     // =========================
-    // 2) STATE DATA TERBARU
+    // STATE DATA TERBARU
     // =========================
-    const latest = {
-      t1: null, t2: null, t3: null, t4: null, t5: null,
-      hum: null, noise: null,
-      alarm: null
-    };
+    const latest = { t1:null,t2:null,t3:null,t4:null,t5:null, hum:null, noise:null, alarm:null };
 
-    function setText(id, val, suffix=""){
-      document.getElementById(id).innerText = (val ?? "--") + suffix;
+    // format 1 desimal untuk suhu/kelembaban
+    function fmt1(v){
+      if (v === null || v === undefined || v === "") return "--";
+      const n = Number(v);
+      if (Number.isNaN(n)) return "--";
+      return n.toFixed(1);
     }
-
+    function fmtInt(v){
+      if (v === null || v === undefined || v === "") return "--";
+      const n = Number(v);
+      if (Number.isNaN(n)) return "--";
+      return String(Math.round(n));
+    }
+    function setText(id, val, suffix=""){
+      document.getElementById(id).innerText = val + suffix;
+    }
     function nowString(){
       return new Date().toLocaleString("id-ID");
     }
+    function setStatus(text){
+      document.getElementById("status").innerText = text;
+    }
 
     // =========================
-    // 3) TIMER + LOGGING (TIAP 59 DETIK)
+    // TIMER + LOGGING (TIAP 59 DETIK)
     // =========================
-    const LOG_EVERY_MS = 59000; // 59 detik
+    const LOG_EVERY_MS = 59000;
     let measuring = false;
     let endAt = 0;
     let timerInterval = null;
@@ -172,11 +197,6 @@
       return `${mm}:${ss}`;
     }
 
-    function setStatus(text){
-      document.getElementById("status").innerText = text;
-    }
-
-    // simpan 1 baris (paket lengkap semua sensor)
     function pushLogRow(){
       if (!measuring) return;
 
@@ -211,12 +231,10 @@
       // ambil sampel pertama langsung
       pushLogRow();
 
-      // lalu sampling tiap 59 detik
-      logInterval = setInterval(() => {
-        pushLogRow();
-      }, LOG_EVERY_MS);
+      // sampling tiap 59 detik
+      logInterval = setInterval(() => pushLogRow(), LOG_EVERY_MS);
 
-      // timer countdown
+      // countdown timer
       timerInterval = setInterval(() => {
         const left = endAt - Date.now();
         document.getElementById("timer").innerText = fmtTime(left);
@@ -252,12 +270,10 @@
       setStatus("Status: log direset 🧹 (0 log)");
     }
 
-    function downloadCSV(){
-      if (logData.length === 0){
-        alert("Log kosong. Klik 'Mulai Pengukuran' dulu.");
-        return;
-      }
-
+    // =========================
+    // CSV BUILD
+    // =========================
+    function buildCSV(){
       const header = [
         "waktu","t1","t2","t3","t4","suhu_matras",
         "kelembaban","noise_analog","alarm"
@@ -269,18 +285,25 @@
         const waktu = `"${String(r.waktu).replaceAll('"','""')}"`;
         const line = [
           waktu,
-          r.t1 ?? "",
-          r.t2 ?? "",
-          r.t3 ?? "",
-          r.t4 ?? "",
-          r.t5 ?? "",
-          r.hum ?? "",
-          r.noise ?? "",
+          (r.t1 ?? ""), (r.t2 ?? ""), (r.t3 ?? ""), (r.t4 ?? ""),
+          (r.t5 ?? ""),
+          (r.hum ?? ""),
+          (r.noise ?? ""),
           (r.alarm === true) ? 1 : (r.alarm === false ? 0 : "")
         ].join(",");
         csv += line + "\n";
       });
 
+      return csv;
+    }
+
+    function downloadCSV(){
+      if (logData.length === 0){
+        alert("Log kosong. Klik 'Mulai Pengukuran' dulu.");
+        return;
+      }
+
+      const csv = buildCSV();
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
 
@@ -294,8 +317,68 @@
       URL.revokeObjectURL(url);
     }
 
+    // (opsional) copy 1-2 baris CSV untuk cek cepat
+    function copyLastCSVPreview(){
+      if (logData.length === 0){
+        alert("Log kosong.");
+        return;
+      }
+      const csv = buildCSV().split("\n").slice(0, Math.min(4, logData.length + 2)).join("\n");
+      navigator.clipboard.writeText(csv)
+        .then(()=> alert("Preview CSV berhasil di-copy ✅"))
+        .catch(()=> alert("Gagal copy (browser menolak) ❌"));
+    }
+
     // =========================
-    // 4) REALTIME LISTENERS (TAMPILAN SAJA)
+    // UPLOAD CSV KE GOOGLE DRIVE (Apps Script)
+    // =========================
+    async function uploadCSVtoDrive(){
+      if (logData.length === 0){
+        alert("Log kosong. Klik 'Mulai Pengukuran' dulu.");
+        return;
+      }
+      if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes("PASTE_URL")){
+        alert("URL Google Apps Script belum diisi (GAS_WEB_APP_URL).");
+        return;
+      }
+
+      const csv = buildCSV();
+      setStatus("Status: upload ke Google Drive... ⏫");
+
+      try{
+        const res = await fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: csv
+        });
+
+        const text = await res.text();
+        // Apps Script mengembalikan JSON (kita parse kalau bisa)
+        let obj = null;
+        try { obj = JSON.parse(text); } catch(e) {}
+
+        if (!res.ok){
+          setStatus("Status: upload gagal ❌ (HTTP " + res.status + ")");
+          alert("Upload gagal. Cek akses Web App Apps Script (Anyone) + Deploy.");
+          return;
+        }
+
+        if (obj && obj.ok){
+          setStatus(`Status: upload sukses ✅ (${obj.fileName})`);
+          alert("Upload sukses ✅\nFile: " + obj.fileName);
+        } else {
+          setStatus("Status: upload selesai (cek Drive) ✅");
+          alert("Upload selesai. Silakan cek folder Incubator_Logs di Google Drive.");
+        }
+
+      } catch(err){
+        setStatus("Status: upload error ❌");
+        alert("Upload error. Kemungkinan CORS / akses Web App belum 'Anyone'.\n\nDetail: " + err);
+      }
+    }
+
+    // =========================
+    // REALTIME LISTENERS (TAMPILAN SAJA)
     // =========================
     function setAlarmBadge(val){
       const el = document.getElementById("alarmBadge");
@@ -312,19 +395,19 @@
     }
 
     // suhu titik 1-4
-    db.ref("incubator/suhu/t1").on("value", snap => { latest.t1 = snap.val(); setText("t1", latest.t1, " °C"); });
-    db.ref("incubator/suhu/t2").on("value", snap => { latest.t2 = snap.val(); setText("t2", latest.t2, " °C"); });
-    db.ref("incubator/suhu/t3").on("value", snap => { latest.t3 = snap.val(); setText("t3", latest.t3, " °C"); });
-    db.ref("incubator/suhu/t4").on("value", snap => { latest.t4 = snap.val(); setText("t4", latest.t4, " °C"); });
+    db.ref("incubator/suhu/t1").on("value", snap => { latest.t1 = snap.val(); setText("t1", fmt1(latest.t1), " °C"); });
+    db.ref("incubator/suhu/t2").on("value", snap => { latest.t2 = snap.val(); setText("t2", fmt1(latest.t2), " °C"); });
+    db.ref("incubator/suhu/t3").on("value", snap => { latest.t3 = snap.val(); setText("t3", fmt1(latest.t3), " °C"); });
+    db.ref("incubator/suhu/t4").on("value", snap => { latest.t4 = snap.val(); setText("t4", fmt1(latest.t4), " °C"); });
 
     // suhu matras
-    db.ref("incubator/suhu_matras").on("value", snap => { latest.t5 = snap.val(); setText("t5", latest.t5, " °C"); });
+    db.ref("incubator/suhu_matras").on("value", snap => { latest.t5 = snap.val(); setText("t5", fmt1(latest.t5), " °C"); });
 
     // kelembaban
-    db.ref("incubator/kelembaban").on("value", snap => { latest.hum = snap.val(); setText("hum", latest.hum, " %"); });
+    db.ref("incubator/kelembaban").on("value", snap => { latest.hum = snap.val(); setText("hum", fmt1(latest.hum), " %"); });
 
     // noise analog
-    db.ref("incubator/noise/analog").on("value", snap => { latest.noise = snap.val(); setText("noise", latest.noise, ""); });
+    db.ref("incubator/noise/analog").on("value", snap => { latest.noise = snap.val(); setText("noise", fmtInt(latest.noise), ""); });
 
     // alarm
     db.ref("incubator/alarm").on("value", snap => { latest.alarm = snap.val(); setAlarmBadge(latest.alarm); });
