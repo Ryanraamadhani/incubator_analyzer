@@ -92,7 +92,7 @@
   <div class="card">
     <h1>🟢 Incubator Analyzer</h1>
     <p>
-      Monitoring realtime (Firebase RTDB): 5 suhu (4 titik + matras), kelembaban, kebisingan, alarm.
+      Monitoring realtime (Firebase RTDB): 6 suhu (T1-T5 + Matras), kelembaban, kebisingan, alarm.
       Log disimpan <b>tiap 59 detik</b> saat pengukuran aktif.
     </p>
 
@@ -106,6 +106,7 @@
       <div class="sensor-box"><span class="label">Suhu Titik 2</span><span id="t2" class="value">-- °C</span></div>
       <div class="sensor-box"><span class="label">Suhu Titik 3</span><span id="t3" class="value">-- °C</span></div>
       <div class="sensor-box"><span class="label">Suhu Titik 4</span><span id="t4" class="value">-- °C</span></div>
+      <div class="sensor-box"><span class="label">Suhu Titik 5(DHT22)</span><span id="t5" class="value">-- °C</span></div>
     </div>
 
     <div class="grid1">
@@ -178,7 +179,7 @@
     // 2) STATE TERBARU (realtime)
     // =========================
     const latest = {
-      t1: null, t2: null, t3: null, t4: null,
+      t1: null, t2: null, t3: null, t4: null, t5: null,
       suhu_matras: null,
       kelembaban: null,
       kebisingan: null,
@@ -205,6 +206,8 @@
     db.ref("incubator/t2").on("value", s => { latest.t2 = s.val(); document.getElementById("t2").innerText = fmt1(latest.t2) + " °C"; });
     db.ref("incubator/t3").on("value", s => { latest.t3 = s.val(); document.getElementById("t3").innerText = fmt1(latest.t3) + " °C"; });
     db.ref("incubator/t4").on("value", s => { latest.t4 = s.val(); document.getElementById("t4").innerText = fmt1(latest.t4) + " °C"; });
+    db.ref("incubator/t5").on("value", s => { latest.t5 = s.val(); document.getElementById("t5").innerText = fmt1(latest.t5) + " °C"; });
+
 
     db.ref("incubator/suhu_matras").on("value", s => {
       latest.suhu_matras = s.val();
@@ -259,6 +262,7 @@
         t2: fmt1(latest.t2),
         t3: fmt1(latest.t3),
         t4: fmt1(latest.t4),
+        t5: fmt1(latest.t5),
         suhu_matras: fmt1(latest.suhu_matras),
         kelembaban: fmt1(latest.kelembaban),
         kebisingan: (latest.kebisingan ?? "--"),
@@ -322,9 +326,9 @@
     // =========================
     function buildCSV(){
       if (logData.length === 0) return "";
-      let csv = "waktu,t1,t2,t3,t4,suhu_matras,kelembaban,kebisingan,alarm\n";
+      let csv = "waktu,t1,t2,t3,t4,t5,suhu_matras,kelembaban,kebisingan,alarm\n";
       logData.forEach(r => {
-        csv += `${r.waktu},${r.t1},${r.t2},${r.t3},${r.t4},${r.suhu_matras},${r.kelembaban},${r.kebisingan},${r.alarm}\n`;
+        csv += `${r.waktu},${r.t1},${r.t2},${r.t3},${r.t4},${r.t5},${r.suhu_matras},${r.kelembaban},${r.kebisingan},${r.alarm}\n`;
       });
       return csv;
     }
